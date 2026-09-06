@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Concentrate Order Predictor v3.2</title>
+<title>Concentrate Order Predictor v3.4</title>
 <style>
 :root{--bg:#f4f6f3;--card:#fff;--txt:#172019;--muted:#66736a;--green:#2f6b3f;--pale:#eaf3ec;--border:#d8e0d9;--warn:#9b6200;--red:#a12e2e}
 *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
@@ -25,7 +25,7 @@ footer{text-align:center;padding:18px;color:var(--muted);font-size:12px}
 </style>
 </head>
 <body>
-<header><h1>Concentrate Order Predictor v3.2</h1><p>Forward delivery schedule + concentrate cost forecast</p></header>
+<header><h1>Concentrate Order Predictor v3.4</h1><p>Forward delivery schedule + concentrate cost forecast</p></header>
 <main><div class="grid">
 
 <section class="card c12">
@@ -100,6 +100,10 @@ footer{text-align:center;padding:18px;color:var(--muted);font-size:12px}
 <div class="kpis">
 <div class="kpi"><div class="lab">Cost today</div><div id="costToday" class="val">—</div></div>
 <div class="kpi"><div class="lab">Cost / calf / day</div><div id="costHead" class="val">—</div></div>
+<div class="kpi"><div class="lab">Annualised cost (current rate)</div><div id="annualCost" class="val">—</div></div>
+<div class="kpi"><div class="lab">Annualised tonnes (current rate)</div><div id="annualTonnes" class="val">—</div></div>
+<div class="kpi"><div class="lab">Cumulative tonnes used since latest load</div><div id="cumTonnes" class="val">—</div></div>
+<div class="kpi"><div class="lab">Cumulative feed cost since latest load</div><div id="cumCost" class="val">—</div></div>
 <div class="kpi"><div class="lab">Next load cost</div><div id="nextLoadCost" class="val">—</div></div>
 <div class="kpi"><div class="lab">Projected 60-day cost</div><div id="cost60" class="val">—</div></div>
 <div class="kpi"><div class="lab">Projected cost to season end</div><div id="seasonCost" class="val">—</div></div>
@@ -127,7 +131,7 @@ footer{text-align:center;padding:18px;color:var(--muted);font-size:12px}
 </section>
 
 </div></main>
-<footer>Concentrate Order Predictor v3.2</footer>
+<footer>Concentrate Order Predictor v3.4</footer>
 
 <script>
 const capacity=document.getElementById("capacity");
@@ -160,6 +164,10 @@ const daily=document.getElementById("daily");
 const forecastAsOf=document.getElementById("forecastAsOf");
 const costToday=document.getElementById("costToday");
 const costHead=document.getElementById("costHead");
+const annualCost=document.getElementById("annualCost");
+const annualTonnes=document.getElementById("annualTonnes");
+const cumTonnes=document.getElementById("cumTonnes");
+const cumCost=document.getElementById("cumCost");
 const nextLoadCost=document.getElementById("nextLoadCost");
 const cost60=document.getElementById("cost60");
 const seasonCost=document.getElementById("seasonCost");
@@ -239,6 +247,12 @@ function render(){
  let dailyCost=(u/1000)*p;
  costToday.textContent=euro(dailyCost,2)+"/d";
  costHead.textContent=heads?euro(dailyCost/heads,2):"—";
+ annualCost.textContent=euro(dailyCost*365,0);
+ let annualT=(u/1000)*365;
+ annualTonnes.textContent=fmt(annualT,1)+" t";
+ let cumulativeT=Math.max(0,(+before.value||0)+(+lastQty.value||0)-st);
+ cumTonnes.textContent=fmt(cumulativeT,2)+" t";
+ cumCost.textContent=euro(cumulativeT*p,0);
  nextLoadCost.textContent=first?euro(first.qty*p+dc,0):"—";
  let horizon=Math.max(1,+costDays.value||60);
  let simCost=simulate(Math.max(240,horizon+10));
