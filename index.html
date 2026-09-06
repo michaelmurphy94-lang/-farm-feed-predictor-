@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Concentrate Order Predictor v3.4</title>
+<title>Concentrate Order Predictor v3.5</title>
 <style>
 :root{--bg:#f4f6f3;--card:#fff;--txt:#172019;--muted:#66736a;--green:#2f6b3f;--pale:#eaf3ec;--border:#d8e0d9;--warn:#9b6200;--red:#a12e2e}
 *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
@@ -25,7 +25,7 @@ footer{text-align:center;padding:18px;color:var(--muted);font-size:12px}
 </style>
 </head>
 <body>
-<header><h1>Concentrate Order Predictor v3.4</h1><p>Forward delivery schedule + concentrate cost forecast</p></header>
+<header><h1>Concentrate Order Predictor v3.5</h1><p>Forward delivery schedule + concentrate cost forecast</p></header>
 <main><div class="grid">
 
 <section class="card c12">
@@ -72,6 +72,7 @@ footer{text-align:center;padding:18px;color:var(--muted);font-size:12px}
 <div class="row">
 <div><label>Latest load date</label><input id="lastDate" type="date" value="2026-07-31"></div>
 <div><label>Latest load t</label><input id="lastQty" type="number" step=".01" value="4.32"></div>
+<div><label>Latest load price €/t</label><input id="lastPrice" type="number" step="1" value="400"></div>
 <div><label>Estimated feed already in bin then t</label><input id="before" type="number" step=".05" value=".10"></div>
 <div><label>Weight given to recent actual usage</label><input id="actualWeight" type="number" step=".05" min="0" max="1" value=".35"></div>
 <div><label>Fade actual-history effect over days</label><input id="fadeDays" type="number" value="21"></div>
@@ -102,6 +103,7 @@ footer{text-align:center;padding:18px;color:var(--muted);font-size:12px}
 <div class="kpi"><div class="lab">Cost / calf / day</div><div id="costHead" class="val">—</div></div>
 <div class="kpi"><div class="lab">Annualised cost (current rate)</div><div id="annualCost" class="val">—</div></div>
 <div class="kpi"><div class="lab">Annualised tonnes (current rate)</div><div id="annualTonnes" class="val">—</div></div>
+<div class="kpi"><div class="lab">Latest load cost</div><div id="lastLoadCost" class="val">—</div></div>
 <div class="kpi"><div class="lab">Cumulative tonnes used since latest load</div><div id="cumTonnes" class="val">—</div></div>
 <div class="kpi"><div class="lab">Cumulative feed cost since latest load</div><div id="cumCost" class="val">—</div></div>
 <div class="kpi"><div class="lab">Next load cost</div><div id="nextLoadCost" class="val">—</div></div>
@@ -131,7 +133,7 @@ footer{text-align:center;padding:18px;color:var(--muted);font-size:12px}
 </section>
 
 </div></main>
-<footer>Concentrate Order Predictor v3.4</footer>
+<footer>Concentrate Order Predictor v3.5</footer>
 
 <script>
 const capacity=document.getElementById("capacity");
@@ -147,6 +149,7 @@ const grass=document.getElementById("grass");
 const rise=document.getElementById("rise");
 const lastDate=document.getElementById("lastDate");
 const lastQty=document.getElementById("lastQty");
+const lastPrice=document.getElementById("lastPrice");
 const before=document.getElementById("before");
 const actualWeight=document.getElementById("actualWeight");
 const fadeDays=document.getElementById("fadeDays");
@@ -166,6 +169,7 @@ const costToday=document.getElementById("costToday");
 const costHead=document.getElementById("costHead");
 const annualCost=document.getElementById("annualCost");
 const annualTonnes=document.getElementById("annualTonnes");
+const lastLoadCost=document.getElementById("lastLoadCost");
 const cumTonnes=document.getElementById("cumTonnes");
 const cumCost=document.getElementById("cumCost");
 const nextLoadCost=document.getElementById("nextLoadCost");
@@ -250,9 +254,11 @@ function render(){
  annualCost.textContent=euro(dailyCost*365,0);
  let annualT=(u/1000)*365;
  annualTonnes.textContent=fmt(annualT,1)+" t";
+ let lp=Math.max(0,+lastPrice.value||0);
+ lastLoadCost.textContent=euro((+lastQty.value||0)*lp,0);
  let cumulativeT=Math.max(0,(+before.value||0)+(+lastQty.value||0)-st);
  cumTonnes.textContent=fmt(cumulativeT,2)+" t";
- cumCost.textContent=euro(cumulativeT*p,0);
+ cumCost.textContent=euro(cumulativeT*lp,0);
  nextLoadCost.textContent=first?euro(first.qty*p+dc,0):"—";
  let horizon=Math.max(1,+costDays.value||60);
  let simCost=simulate(Math.max(240,horizon+10));
@@ -295,14 +301,14 @@ function render(){
  }
 }
 function save(){
- let ids=["capacity","stock","loadSize","lead","safety","price","deliveryCharge","costDays","seasonEnd","heifers","bulls","hi","bi","grass","rise","lastDate","lastQty","before","actualWeight","fadeDays"],d={};
+ let ids=["capacity","stock","loadSize","lead","safety","price","deliveryCharge","costDays","seasonEnd","heifers","bulls","hi","bi","grass","rise","lastDate","lastQty","lastPrice","before","actualWeight","fadeDays"],d={};
  ids.forEach(id=>d[id]=document.getElementById(id).value);localStorage.setItem("copv3",JSON.stringify(d));
 }
 function load(){
  let raw=localStorage.getItem("copv3");if(raw){try{let d=JSON.parse(raw);Object.keys(d).forEach(k=>{if(document.getElementById(k))document.getElementById(k).value=d[k]})}catch(e){}}
  render();
 }
-["capacity","stock","loadSize","lead","safety","price","deliveryCharge","costDays","seasonEnd","heifers","bulls","hi","bi","grass","rise","lastDate","lastQty","before","actualWeight","fadeDays"].forEach(id=>document.getElementById(id).addEventListener("change",render));
+["capacity","stock","loadSize","lead","safety","price","deliveryCharge","costDays","seasonEnd","heifers","bulls","hi","bi","grass","rise","lastDate","lastQty","lastPrice","before","actualWeight","fadeDays"].forEach(id=>document.getElementById(id).addEventListener("change",render));
 load();
 </script>
 </body></html>
